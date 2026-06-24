@@ -1,0 +1,33 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: rss_db
+      POSTGRES_USER: rss_user
+      POSTGRES_PASSWORD: rss_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rss_user -d rss_db"]
+      interval: 5s
+      retries: 5
+
+  web:
+    build: .
+    ports:
+      - "50002:50002"
+    environment:
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_NAME: rss_db
+      DB_USER: rss_user
+      DB_PASSWORD: rss_pass
+      DB_SSLMODE: disable
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
